@@ -95,8 +95,8 @@ main(int argc, char const *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    const int width = 1280;
-    const int height = 720;
+    const int width = 800;
+    const int height = 600;
     const char* title = "C Engine";
    
 
@@ -235,6 +235,20 @@ float vertArr[] = {
     glUniform1i(glGetUniformLocation(program, "u_texture1"), 0);
     glUniform1i(glGetUniformLocation(program, "u_texture2"), 1);
 
+
+    mat4 model = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate(model, -0.55f, (vec3){1.0f, 0.0f, 0.0f});
+
+    mat4 view = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(view, (vec3){0.0f, 0.0f, -3.0f});
+
+    mat4 projection;
+    glm_perspective(GLM_PI_4, (float)width / (float)height, 0.1f, 100.0f, projection);
+
+    glUniformMatrix4fv(glGetUniformLocation(program, "u_model"), 1, GL_FALSE, model[0]);
+    glUniformMatrix4fv(glGetUniformLocation(program, "u_view"), 1, GL_FALSE, view[0]);
+    glUniformMatrix4fv(glGetUniformLocation(program, "u_projection"), 1, GL_FALSE, projection[0]);
+
     while (!glfwWindowShouldClose(glfw_win)) {
         glfwPollEvents();
 
@@ -246,14 +260,8 @@ float vertArr[] = {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        mat4 trans = GLM_MAT4_IDENTITY_INIT;
-        glm_translate(trans, (vec3){cos(glfwGetTime()), sin(glfwGetTime()), 0.0f});
-        // glm_rotate(trans, glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
-
         glUseProgram(program);
         glBindVertexArray(vaoID);
-
-        glUniformMatrix4fv(glGetUniformLocation(program, "u_transform"), 1, GL_FALSE, trans[0]);
 
         glDrawElements(GL_TRIANGLES, sizeof(elementArr)/sizeof(float), GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(glfw_win);
