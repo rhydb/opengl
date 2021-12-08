@@ -28,101 +28,14 @@ struct camera_t {
     .pos = (vec3){0.0f, 0.0f, 3.0f},
     .front = (vec3){0.0f, 0.0f, -1.0f},
     .up = {0.0f, 1.0f, 0.0f},
-    .yaw = -GLM_PI_2, .pitch = 0.0f,
+    .yaw = GLM_PI_2, .pitch = 0.0f,
     .movespeed = 2.0f, .sensitivity = 0.1f
 };
 
-unsigned int
-loadshaders(const char* vertfile, const char* fragfile)
-{
-    GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
+unsigned int loadshaders(const char* vertfile, const char* fragfile);
+void framebuffersize_cb(GLFWwindow* window, int width, int height);
 
-    char *vertsrc = 0;
-    char *fragsrc = 0;
-    readfile(vertfile, &vertsrc);
-    readfile(fragfile, &fragsrc);
-
-    GLint result = GL_FALSE;
-    int loglen;
-
-    printf("Compiling shader: %s\n", vertfile);
-    char const * vertsrcptr = vertsrc;
-    glShaderSource(vertID, 1, &vertsrcptr, NULL);
-    glCompileShader(vertID);
-
-    glGetShaderiv(vertID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(vertID, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen > 0) {
-        char log[loglen+1];
-        glGetShaderInfoLog(vertID, loglen, NULL, log);
-        printf("%s\n", log);
-    }
-
-    printf("Compiling shader: %s\n", fragfile);
-    char const * fragsrcptr = fragsrc;
-    glShaderSource(fragID, 1, &fragsrcptr, NULL);
-    glCompileShader(fragID);
-
-    glGetShaderiv(fragID, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(fragID, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen > 0) {
-        char log[loglen+1];
-        glGetShaderInfoLog(fragID, loglen, NULL, log);
-        printf("%s\n", log);
-    }
-
-    printf("Linking program\n");
-    GLuint programid = glCreateProgram();
-    glAttachShader(programid, vertID);
-    glAttachShader(programid, fragID);
-    glLinkProgram(programid);
-
-    glGetProgramiv(programid, GL_LINK_STATUS, &result);
-    glGetProgramiv(programid, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen > 0) {
-        char log[loglen+1];
-        glGetShaderInfoLog(programid, loglen, NULL, log);
-        printf("Linking error: %s\n", log);
-    }
-
-    glDetachShader(programid, vertID);
-    glDetachShader(programid, fragID);
-    glDeleteShader(vertID);
-    glDeleteShader(fragID);
-
-    free(vertsrc);
-    free(fragsrc);
-
-    return programid;
-}
-
-void framebuffersize_cb(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-
-void mousepos(GLFWwindow *win, double x, double y)
-{
-    mousepos_cb(win, x, y);
-
-    float xoffset = input.mouse.x - input.mouse.last_x;
-    float yoffset = input.mouse.y - input.mouse.last_y;
-    xoffset *= cam.sensitivity;
-    yoffset *= cam.sensitivity;
-    cam.yaw = fmod(cam.yaw + xoffset, 360.0f);
-    cam.pitch -= yoffset;
-    if (cam.pitch < -89.0f)
-        cam.pitch = -89.0f;
-    if (cam.pitch > 89.0f)
-        cam.pitch = 89.0f;
-
-    cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
-    cam.front[1] = sin(glm_rad(cam.pitch));
-    cam.front[2] = sin(glm_rad(cam.yaw) * cos(glm_rad(cam.pitch)));
-    glm_normalize(cam.front);
-}
+void mousepos(GLFWwindow *win, double x, double y);
 
 int
 main(int argc, char const *argv[])
@@ -179,47 +92,47 @@ float vertArr[] = {
     };
 
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   1.0f, 0.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    0.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,    0.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,    0.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,    1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,    1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,    1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,    1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,    1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f,  1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,    0.0f, 1.0f,  1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    0.0f, 1.0f,  1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    0.0f, 1.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 1.0f,  1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f,  1.0f,
     };
     vec3 cubePositions[] = {
         { 0.0f,  0.0f,  0.0f},
@@ -245,11 +158,9 @@ float vertArr[] = {
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elementArr), elementArr, GL_STATIC_DRAW);
 
     int pos_size = 3;
-    int colour_size = 0;
+    int colour_size = 3;
     int texture_size = 2;
     int vert_size = (pos_size + colour_size + texture_size) * (int)sizeof(float);
 
@@ -262,22 +173,23 @@ float vertArr[] = {
     );
     glEnableVertexAttribArray(0);
 
-    // glVertexAttribPointer(1,
-    //                       colour_size,
-    //                       GL_FLOAT,
-    //                       GL_FALSE,
-    //                       vert_size,
-    //                       (void*)(pos_size * sizeof(float))
-    // );
-    // glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2,
+    glVertexAttribPointer(1,
                           texture_size,
                           GL_FLOAT,
                           GL_FALSE,
                           vert_size,
-                          (void*)((pos_size + colour_size) * sizeof(float))
+                          (void*)((pos_size) * sizeof(float))
                           );
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2,
+                          colour_size,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          vert_size,
+                          (void*)((pos_size + texture_size) * sizeof(float))
+    );
     glEnableVertexAttribArray(2);
 
     unsigned int texture;
@@ -419,4 +331,95 @@ float vertArr[] = {
     glDeleteBuffers(1, &eboID);
     glfwTerminate();
 	return 0;
+}
+
+unsigned int
+loadshaders(const char* vertfile, const char* fragfile)
+{
+    GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragID = glCreateShader(GL_FRAGMENT_SHADER);
+
+    char *vertsrc = 0;
+    char *fragsrc = 0;
+    readfile(vertfile, &vertsrc);
+    readfile(fragfile, &fragsrc);
+
+    GLint result = GL_FALSE;
+    int loglen;
+
+    printf("Compiling shader: %s\n", vertfile);
+    char const * vertsrcptr = vertsrc;
+    glShaderSource(vertID, 1, &vertsrcptr, NULL);
+    glCompileShader(vertID);
+
+    glGetShaderiv(vertID, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(vertID, GL_INFO_LOG_LENGTH, &loglen);
+    if (loglen > 0) {
+        char log[loglen+1];
+        glGetShaderInfoLog(vertID, loglen, NULL, log);
+        printf("%s\n", log);
+    }
+
+    printf("Compiling shader: %s\n", fragfile);
+    char const * fragsrcptr = fragsrc;
+    glShaderSource(fragID, 1, &fragsrcptr, NULL);
+    glCompileShader(fragID);
+
+    glGetShaderiv(fragID, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(fragID, GL_INFO_LOG_LENGTH, &loglen);
+    if (loglen > 0) {
+        char log[loglen+1];
+        glGetShaderInfoLog(fragID, loglen, NULL, log);
+        printf("%s\n", log);
+    }
+
+    printf("Linking program\n");
+    GLuint programid = glCreateProgram();
+    glAttachShader(programid, vertID);
+    glAttachShader(programid, fragID);
+    glLinkProgram(programid);
+
+    glGetProgramiv(programid, GL_LINK_STATUS, &result);
+    glGetProgramiv(programid, GL_INFO_LOG_LENGTH, &loglen);
+    if (loglen > 0) {
+        char log[loglen+1];
+        glGetShaderInfoLog(programid, loglen, NULL, log);
+        printf("Linking error: %s\n", log);
+    }
+
+    glDetachShader(programid, vertID);
+    glDetachShader(programid, fragID);
+    glDeleteShader(vertID);
+    glDeleteShader(fragID);
+
+    free(vertsrc);
+    free(fragsrc);
+
+    return programid;
+}
+
+void framebuffersize_cb(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void mousepos(GLFWwindow *win, double x, double y)
+{
+    mousepos_cb(win, x, y);
+
+    float xoffset = input.mouse.x - input.mouse.last_x;
+    float yoffset = input.mouse.y - input.mouse.last_y;
+    xoffset *= cam.sensitivity;
+    yoffset *= cam.sensitivity;
+    cam.yaw = fmod(cam.yaw + xoffset, 360.0f);
+    cam.pitch -= yoffset;
+    if (cam.pitch < -89.0f)
+        cam.pitch = -89.0f;
+    if (cam.pitch > 89.0f)
+        cam.pitch = 89.0f;
+
+    cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+    cam.front[1] = sin(glm_rad(cam.pitch));
+    cam.front[2] = sin(glm_rad(cam.yaw) * cos(glm_rad(cam.pitch)));
+    glm_normalize(cam.front);
 }
