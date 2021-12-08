@@ -4,7 +4,7 @@ SOURCES = $(wildcard src/*.c)
 
 OBJECTS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 
-CFLAGS = -Isrc
+CFLAGS = -Isrc -std=c99
 
 all: $(BIN)
 	@echo Build complete

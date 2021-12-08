@@ -1,22 +1,7 @@
 #include "input.h"
 
-#define MOUSE_BUTTON_COUNT 3
 
-struct input_t {
-    struct {
-        float x;
-        float y;
-        float last_x;
-        float last_y;
-        float scroll_x;
-        float scroll_y;
-        bool dragging;
-        bool buttons[MOUSE_BUTTON_COUNT];
-    } mouse;
-
-    bool keys[350];
-
-} input = {
+struct input_t input = {
     .mouse = {
         .scroll_x = 0, .scroll_y = 0,
         .x = 0, .y = 0, .last_x = 0, .last_y = 0,

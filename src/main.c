@@ -15,6 +15,23 @@ struct color_t {
     .r = 128, .g = 128, .b = 128
 };
 
+typedef struct camera_t camera;
+struct camera_t {
+    float yaw;
+    float pitch;
+    float movespeed;
+    float sensitivity;
+    vec3 pos;
+    vec3 front;
+    vec3 up;
+} cam = {
+    .pos = (vec3){0.0f, 0.0f, 3.0f},
+    .front = (vec3){0.0f, 0.0f, -1.0f},
+    .up = {0.0f, 1.0f, 0.0f},
+    .yaw = -GLM_PI_2, .pitch = 0.0f,
+    .movespeed = 2.0f, .sensitivity = 0.1f
+};
+
 unsigned int
 loadshaders(const char* vertfile, const char* fragfile)
 {
@@ -85,6 +102,28 @@ void framebuffersize_cb(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+
+void mousepos(GLFWwindow *win, double x, double y)
+{
+    mousepos_cb(win, x, y);
+
+    float xoffset = input.mouse.x - input.mouse.last_x;
+    float yoffset = input.mouse.y - input.mouse.last_y;
+    xoffset *= cam.sensitivity;
+    yoffset *= cam.sensitivity;
+    cam.yaw = fmod(cam.yaw + xoffset, 360.0f);
+    cam.pitch -= yoffset;
+    if (cam.pitch < -89.0f)
+        cam.pitch = -89.0f;
+    if (cam.pitch > 89.0f)
+        cam.pitch = 89.0f;
+
+    cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+    cam.front[1] = sin(glm_rad(cam.pitch));
+    cam.front[2] = sin(glm_rad(cam.yaw) * cos(glm_rad(cam.pitch)));
+    glm_normalize(cam.front);
+}
+
 int
 main(int argc, char const *argv[])
 {
@@ -94,7 +133,6 @@ main(int argc, char const *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     const int width = 800;
     const int height = 600;
     const char* title = "C Engine";
@@ -105,10 +143,9 @@ main(int argc, char const *argv[])
         glfwTerminate();
         die("Failed to create GLFW window\n");
     }
-
     glfwSetFramebufferSizeCallback(glfw_win, framebuffersize_cb);
     glfwSetMouseButtonCallback(glfw_win, mousebtn_cb);
-	glfwSetCursorPosCallback(glfw_win, mousepos_cb);
+	glfwSetCursorPosCallback(glfw_win, mousepos);
 	glfwSetScrollCallback(glfw_win, scroll_cb);
 	glfwSetKeyCallback(glfw_win, key_cb);
 
@@ -120,8 +157,10 @@ main(int argc, char const *argv[])
 
     printf("Status: Using GLEW %s & GL %s\n", glewGetString(GLEW_VERSION), glGetString(GL_VERSION));
 
+    glfwSetInputMode(glfw_win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glViewport(0, 0, width, height);
     glfwSwapInterval(1);
+    glEnable(GL_DEPTH_TEST);
     
     stbi_set_flip_vertically_on_load(true);  
     
@@ -129,32 +168,88 @@ main(int argc, char const *argv[])
 
 float vertArr[] = {
     // positions            // colors                   // texture coords
-    -0.5f, 0.5f, 0.0f,      0.0f, 1.0f, 0.0f,     0.0f, 1.0f, // Top left
-    0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,     1.0f, 1.0f, // Top right
-    -0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 0.0f,     0.0f, 0.0f, // Bottom left
-    0.5f, -0.5f, 0.0f,      1.0f, 0.0f, 0.0f,     1.0f, 0.0f, // Bottom right
+    -0.5f, 0.5f, 0.0f,           0.0f, 1.0f, // Top left
+    0.5f, 0.5f, 0.0f,            1.0f, 1.0f, // Top right
+    -0.5f, -0.5f, 0.0f,          0.0f, 0.0f, // Bottom left
+    0.5f, -0.5f, 0.0f,           1.0f, 0.0f, // Bottom right
 };
     int elementArr[] = {
         0, 1, 2,
         3, 1, 2,
+    };
+
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+    vec3 cubePositions[] = {
+        { 0.0f,  0.0f,  0.0f},
+        { 2.0f,  5.0f, -15.0f},
+        {-1.5f, -2.2f, -2.5f},
+        {-3.8f, -2.0f, -12.3f},
+        { 2.4f, -0.4f, -3.5f},
+        {-1.7f,  3.0f, -7.5f},
+        { 1.3f, -2.0f, -2.5f},
+        { 1.5f,  2.0f, -2.5f},
+        { 1.5f,  0.2f, -1.5f},
+        {-1.3f,  1.0f, -1.5f}
     };
     
     unsigned int vaoID, vboID, eboID;
 
     glGenVertexArrays(1, &vaoID);
     glGenBuffers(1, &vboID);
-    glGenBuffers(1, &eboID);
+    // glGenBuffers(1, &eboID);
 
     glBindVertexArray(vaoID);
 
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertArr), vertArr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elementArr), elementArr, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboID);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elementArr), elementArr, GL_STATIC_DRAW);
 
     int pos_size = 3;
-    int colour_size = 3;
+    int colour_size = 0;
     int texture_size = 2;
     int vert_size = (pos_size + colour_size + texture_size) * (int)sizeof(float);
 
@@ -167,14 +262,14 @@ float vertArr[] = {
     );
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1,
-                          colour_size,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          vert_size,
-                          (void*)(pos_size * sizeof(float))
-    );
-    glEnableVertexAttribArray(1);
+    // glVertexAttribPointer(1,
+    //                       colour_size,
+    //                       GL_FLOAT,
+    //                       GL_FALSE,
+    //                       vert_size,
+    //                       (void*)(pos_size * sizeof(float))
+    // );
+    // glEnableVertexAttribArray(1);
 
     glVertexAttribPointer(2,
                           texture_size,
@@ -235,25 +330,59 @@ float vertArr[] = {
     glUniform1i(glGetUniformLocation(program, "u_texture1"), 0);
     glUniform1i(glGetUniformLocation(program, "u_texture2"), 1);
 
-
-    mat4 model = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(model, -0.55f, (vec3){1.0f, 0.0f, 0.0f});
-
-    mat4 view = GLM_MAT4_IDENTITY_INIT;
-    glm_translate(view, (vec3){0.0f, 0.0f, -3.0f});
-
-    mat4 projection;
-    glm_perspective(GLM_PI_4, (float)width / (float)height, 0.1f, 100.0f, projection);
-
-    glUniformMatrix4fv(glGetUniformLocation(program, "u_model"), 1, GL_FALSE, model[0]);
-    glUniformMatrix4fv(glGetUniformLocation(program, "u_view"), 1, GL_FALSE, view[0]);
-    glUniformMatrix4fv(glGetUniformLocation(program, "u_projection"), 1, GL_FALSE, projection[0]);
-
+    float dt = 0.0f;
+    float lastframe = 0.0f;
     while (!glfwWindowShouldClose(glfw_win)) {
+        float currentframe = glfwGetTime();
+        dt = currentframe - lastframe;
+        lastframe = currentframe;
+
         glfwPollEvents();
 
+        if (input.keys[GLFW_KEY_W]) {
+            vec3 movement;
+            glm_vec3_scale(cam.front, cam.movespeed * dt, movement);
+            glm_vec3_add(cam.pos, movement, cam.pos);
+        }
+        if (input.keys[GLFW_KEY_A]) {
+            vec3 movement;
+            glm_vec3_cross(cam.front, cam.up, movement);
+            glm_normalize(movement);
+            glm_vec3_scale(movement, cam.movespeed * dt, movement);
+            glm_vec3_sub(cam.pos, movement, cam.pos);
+        }
+        if (input.keys[GLFW_KEY_S]) {
+            vec3 movement;
+            glm_vec3_scale(cam.front, cam.movespeed * dt, movement);
+            glm_vec3_sub(cam.pos, movement, cam.pos);
+        }
+        if (input.keys[GLFW_KEY_D]) {
+            vec3 movement;
+            glm_vec3_cross(cam.front, cam.up, movement);
+            glm_normalize(movement);
+            glm_vec3_scale(movement, cam.movespeed * dt, movement);
+            glm_vec3_add(cam.pos, movement, cam.pos);
+        }
+        if (input.keys[GLFW_KEY_LEFT]) {
+            cam.front[0] -= 0.01f;
+        }
+        if (input.keys[GLFW_KEY_RIGHT]) {
+            cam.front[0] += 0.01f;
+        }
+        static esc_state = 0;
+        static esc = 1;
+        if (input.keys[GLFW_KEY_ESCAPE]) {
+            if (esc_state == 0) {
+                esc_state = 1;
+                esc ^= 1;
+                glfwSetInputMode(glfw_win, GLFW_CURSOR, esc ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+            }
+        } else {
+            esc_state = 0;
+        }
+        cam.pos[1] = 0.0f;
         glClearColor(bg.r/255.0f, bg.g/255.0f, bg.b/255.0f, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -263,7 +392,26 @@ float vertArr[] = {
         glUseProgram(program);
         glBindVertexArray(vaoID);
 
-        glDrawElements(GL_TRIANGLES, sizeof(elementArr)/sizeof(float), GL_UNSIGNED_INT, 0);
+        mat4 projection;
+        glm_perspective(glm_rad(90.0f), (float)width / (float)height, 0.1f, 100.0f, projection);
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_projection"), 1, GL_FALSE, projection[0]);
+
+        mat4 view;
+        vec3 center;
+        glm_vec3_add(cam.pos, cam.front, center);
+        glm_lookat(cam.pos, center, cam.up, view);
+        glUniformMatrix4fv(glGetUniformLocation(program, "u_view"), 1, GL_FALSE, view[0]);
+
+
+        // glDrawElements(GL_TRIANGLES, sizeof(elementArr)/sizeof(float), GL_UNSIGNED_INT, 0);
+        for (unsigned int i = 0; i < 10; i++) {
+            mat4 model = GLM_MAT4_IDENTITY_INIT;
+            glm_translate(model, cubePositions[i]);
+            float angle = glfwGetTime() +  20.0f * i;
+            glm_rotate(model, angle, (vec3){1.0f, 0.3f, 0.5f});
+            glUniformMatrix4fv(glGetUniformLocation(program, "u_model"), 1, GL_FALSE, model[0]);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
         glfwSwapBuffers(glfw_win);
     }
     glDeleteVertexArrays(1, &vaoID);

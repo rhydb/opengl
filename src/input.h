@@ -2,9 +2,24 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
+#define MOUSE_BUTTON_COUNT 3
 
 
-struct input_t;
+struct input_t {
+    struct {
+        float x;
+        float y;
+        float last_x;
+        float last_y;
+        float scroll_x;
+        float scroll_y;
+        bool dragging;
+        bool buttons[MOUSE_BUTTON_COUNT];
+    } mouse;
+
+    bool keys[350];
+
+};
 extern struct input_t input;
 
 void mousebtn_cb(GLFWwindow *win, int btn,  int action,  int mods);
