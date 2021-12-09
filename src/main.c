@@ -17,6 +17,7 @@ struct color_t {
 
 typedef struct camera_t camera;
 struct camera_t {
+    float fov;
     float yaw;
     float pitch;
     float movespeed;
@@ -29,13 +30,14 @@ struct camera_t {
     .front = (vec3){0.0f, 0.0f, -1.0f},
     .up = {0.0f, 1.0f, 0.0f},
     .yaw = GLM_PI_2, .pitch = 0.0f,
-    .movespeed = 2.0f, .sensitivity = 0.1f
+    .movespeed = 2.0f, .sensitivity = 0.1f, .fov = 120.0f,
 };
 
 unsigned int loadshaders(const char* vertfile, const char* fragfile);
 void framebuffersize_cb(GLFWwindow* window, int width, int height);
 
 void mousepos(GLFWwindow *win, double x, double y);
+void onscroll(GLFWwindow *win, double xoff, double yoff);
 
 int
 main(int argc, char const *argv[])
@@ -48,9 +50,10 @@ main(int argc, char const *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     const int width = 800;
     const int height = 600;
+    input.mouse.x = input.mouse.last_x = width/2;
+    input.mouse.y = input.mouse.last_y = height/2;
     const char* title = "C Engine";
    
-
     GLFWwindow* glfw_win  = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!glfw_win) {
         glfwTerminate();
@@ -59,7 +62,7 @@ main(int argc, char const *argv[])
     glfwSetFramebufferSizeCallback(glfw_win, framebuffersize_cb);
     glfwSetMouseButtonCallback(glfw_win, mousebtn_cb);
 	glfwSetCursorPosCallback(glfw_win, mousepos);
-	glfwSetScrollCallback(glfw_win, scroll_cb);
+	glfwSetScrollCallback(glfw_win, onscroll);
 	glfwSetKeyCallback(glfw_win, key_cb);
 
     glfwMakeContextCurrent(glfw_win);
@@ -92,47 +95,47 @@ float vertArr[] = {
     };
 
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f, 
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,    1.0f, 1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,    1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    0.0f, 1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,    1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,    1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,    1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,    1.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,    1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,   1.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,    1.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,    1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
     };
     vec3 cubePositions[] = {
         { 0.0f,  0.0f,  0.0f},
@@ -275,14 +278,8 @@ float vertArr[] = {
             glm_vec3_scale(movement, cam.movespeed * dt, movement);
             glm_vec3_add(cam.pos, movement, cam.pos);
         }
-        if (input.keys[GLFW_KEY_LEFT]) {
-            cam.front[0] -= 0.01f;
-        }
-        if (input.keys[GLFW_KEY_RIGHT]) {
-            cam.front[0] += 0.01f;
-        }
-        static esc_state = 0;
-        static esc = 1;
+        static int esc_state = 0;
+        static int esc = 1;
         if (input.keys[GLFW_KEY_ESCAPE]) {
             if (esc_state == 0) {
                 esc_state = 1;
@@ -305,7 +302,7 @@ float vertArr[] = {
         glBindVertexArray(vaoID);
 
         mat4 projection;
-        glm_perspective(glm_rad(90.0f), (float)width / (float)height, 0.1f, 100.0f, projection);
+        glm_perspective(glm_rad(cam.fov), (float)width / (float)height, 0.1f, 100.0f, projection);
         glUniformMatrix4fv(glGetUniformLocation(program, "u_projection"), 1, GL_FALSE, projection[0]);
 
         mat4 view;
@@ -422,4 +419,11 @@ void mousepos(GLFWwindow *win, double x, double y)
     cam.front[1] = sin(glm_rad(cam.pitch));
     cam.front[2] = sin(glm_rad(cam.yaw) * cos(glm_rad(cam.pitch)));
     glm_normalize(cam.front);
+}
+
+void
+onscroll(GLFWwindow *win, double xoff, double yoff)
+{
+    scroll_cb(win, xoff, yoff);
+    cam.fov += yoff;
 }
