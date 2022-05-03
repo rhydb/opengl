@@ -53,7 +53,7 @@ main(int argc, char const *argv[])
     input.mouse.x = input.mouse.last_x = width/2;
     input.mouse.y = input.mouse.last_y = height/2;
     const char* title = "C Engine";
-   
+
     GLFWwindow* glfw_win  = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!glfw_win) {
         glfwTerminate();
@@ -77,9 +77,9 @@ main(int argc, char const *argv[])
     glViewport(0, 0, width, height);
     glfwSwapInterval(1);
     glEnable(GL_DEPTH_TEST);
-    
-    stbi_set_flip_vertically_on_load(true);  
-    
+
+    stbi_set_flip_vertically_on_load(true);
+
     unsigned int program = loadshaders("vert.glsl", "frag.glsl");
 
 float vertArr[] = {
@@ -100,7 +100,7 @@ float vertArr[] = {
          0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
          0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f, 
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
          0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
@@ -149,7 +149,7 @@ float vertArr[] = {
         { 1.5f,  0.2f, -1.5f},
         {-1.3f,  1.0f, -1.5f}
     };
-    
+
     unsigned int vaoID, vboID, eboID;
 
     glGenVertexArrays(1, &vaoID);
@@ -205,7 +205,7 @@ float vertArr[] = {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
+
         int texwidth, texheight, nrChannels;
         unsigned char *data = stbi_load("gus.jpg", &texwidth, &texheight, &nrChannels, STBI_rgb_alpha);
 
@@ -228,7 +228,7 @@ float vertArr[] = {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
+
         int texwidth, texheight, nrChannels;
         unsigned char *data = stbi_load("awesomeface.png", &texwidth, &texheight, &nrChannels, STBI_rgb_alpha);
 
@@ -292,7 +292,7 @@ float vertArr[] = {
         cam.pos[1] = 0.0f;
         glClearColor(bg.r/255.0f, bg.g/255.0f, bg.b/255.0f, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE1);
@@ -408,7 +408,7 @@ void mousepos(GLFWwindow *win, double x, double y)
     float yoffset = input.mouse.y - input.mouse.last_y;
     xoffset *= cam.sensitivity;
     yoffset *= cam.sensitivity;
-    cam.yaw = fmod(cam.yaw + xoffset, 360.0f);
+    cam.yaw = cam.yaw + xoffset;
     cam.pitch -= yoffset;
     if (cam.pitch < -89.0f)
         cam.pitch = -89.0f;
@@ -417,7 +417,7 @@ void mousepos(GLFWwindow *win, double x, double y)
 
     cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
     cam.front[1] = sin(glm_rad(cam.pitch));
-    cam.front[2] = sin(glm_rad(cam.yaw) * cos(glm_rad(cam.pitch)));
+    cam.front[2] = sin(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
     glm_normalize(cam.front);
 }
 
@@ -427,3 +427,4 @@ onscroll(GLFWwindow *win, double xoff, double yoff)
     scroll_cb(win, xoff, yoff);
     cam.fov += yoff;
 }
+
