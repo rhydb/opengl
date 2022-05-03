@@ -2,4 +2,4 @@
 bin
 *.jpg
 *.png
-*.o
+obj/
