@@ -39,6 +39,8 @@ void framebuffersize_cb(GLFWwindow* window, int width, int height);
 void mousepos(GLFWwindow *win, double x, double y);
 void onscroll(GLFWwindow *win, double xoff, double yoff);
 
+int esc = 1;
+
 int
 main(int argc, char const *argv[])
 {
@@ -279,7 +281,6 @@ float vertArr[] = {
             glm_vec3_add(cam.pos, movement, cam.pos);
         }
         static int esc_state = 0;
-        static int esc = 1;
         if (input.keys[GLFW_KEY_ESCAPE]) {
             if (esc_state == 0) {
                 esc_state = 1;
@@ -403,22 +404,23 @@ void framebuffersize_cb(GLFWwindow* window, int width, int height)
 void mousepos(GLFWwindow *win, double x, double y)
 {
     mousepos_cb(win, x, y);
+    if (esc) {
+      float xoffset = input.mouse.x - input.mouse.last_x;
+      float yoffset = input.mouse.y - input.mouse.last_y;
+      xoffset *= cam.sensitivity;
+      yoffset *= cam.sensitivity;
+      cam.yaw = cam.yaw + xoffset;
+      cam.pitch -= yoffset;
+      if (cam.pitch < -89.0f)
+          cam.pitch = -89.0f;
+      if (cam.pitch > 89.0f)
+          cam.pitch = 89.0f;
 
-    float xoffset = input.mouse.x - input.mouse.last_x;
-    float yoffset = input.mouse.y - input.mouse.last_y;
-    xoffset *= cam.sensitivity;
-    yoffset *= cam.sensitivity;
-    cam.yaw = cam.yaw + xoffset;
-    cam.pitch -= yoffset;
-    if (cam.pitch < -89.0f)
-        cam.pitch = -89.0f;
-    if (cam.pitch > 89.0f)
-        cam.pitch = 89.0f;
-
-    cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
-    cam.front[1] = sin(glm_rad(cam.pitch));
-    cam.front[2] = sin(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
-    glm_normalize(cam.front);
+      cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+      cam.front[1] = sin(glm_rad(cam.pitch));
+      cam.front[2] = sin(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+      glm_normalize(cam.front);
+  }
 }
 
 void
