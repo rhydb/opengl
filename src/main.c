@@ -63,9 +63,9 @@ main(int argc, char const *argv[])
     }
     glfwSetFramebufferSizeCallback(glfw_win, framebuffersize_cb);
     glfwSetMouseButtonCallback(glfw_win, mousebtn_cb);
-	glfwSetCursorPosCallback(glfw_win, mousepos);
-	glfwSetScrollCallback(glfw_win, onscroll);
-	glfwSetKeyCallback(glfw_win, key_cb);
+    glfwSetCursorPosCallback(glfw_win, mousepos);
+    glfwSetScrollCallback(glfw_win, onscroll);
+    glfwSetKeyCallback(glfw_win, key_cb);
 
     glfwMakeContextCurrent(glfw_win);
 
