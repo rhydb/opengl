@@ -6,6 +6,7 @@
 #include "stb_image.h"
 #include "utils.h"
 #include "input.h"
+#include "shader.h"
 
 struct color_t {
     float r;
@@ -33,7 +34,6 @@ struct camera_t {
     .movespeed = 2.0f, .sensitivity = 0.1f, .fov = 120.0f,
 };
 
-unsigned int loadshaders(const char* vertfile, const char* fragfile);
 void framebuffersize_cb(GLFWwindow* window, int width, int height);
 
 void mousepos(GLFWwindow *win, double x, double y);
@@ -50,8 +50,8 @@ main(int argc, char const *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    const int width = 800;
-    const int height = 600;
+    const int width = 1280;
+    const int height = 720;
     input.mouse.x = input.mouse.last_x = width/2;
     input.mouse.y = input.mouse.last_y = height/2;
     const char* title = "C Engine";
@@ -85,13 +85,13 @@ main(int argc, char const *argv[])
 
     unsigned int program = loadshaders("vert.glsl", "frag.glsl");
 
-float vertArr[] = {
-    // positions            // colors                   // texture coords
-    -0.5f, 0.5f, 0.0f,           0.0f, 1.0f, // Top left
-    0.5f, 0.5f, 0.0f,            1.0f, 1.0f, // Top right
-    -0.5f, -0.5f, 0.0f,          0.0f, 0.0f, // Bottom left
-    0.5f, -0.5f, 0.0f,           1.0f, 0.0f, // Bottom right
-};
+    float vertArr[] = {
+        // positions            // colors                   // texture coords
+        -0.5f, 0.5f, 0.0f,           0.0f, 1.0f, // Top left
+        0.5f, 0.5f, 0.0f,            1.0f, 1.0f, // Top right
+        -0.5f, -0.5f, 0.0f,          0.0f, 0.0f, // Bottom left
+        0.5f, -0.5f, 0.0f,           1.0f, 0.0f, // Bottom right
+    };
     int elementArr[] = {
         0, 1, 2,
         3, 1, 2,
@@ -99,16 +99,16 @@ float vertArr[] = {
 
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
         -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   1.0f, 1.0f, 0.0f,
         -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,   1.0f, 0.0f, 1.0f,
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
@@ -119,24 +119,24 @@ float vertArr[] = {
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
         -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
 
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
 
         -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
         -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f, 1.0f, 1.0f,
 
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f, 0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f, 1.0f, 0.0f,
         -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,   1.0f, 0.0f, 1.0f,
         -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f, 1.0f, 1.0f,
     };
@@ -176,7 +176,7 @@ float vertArr[] = {
                           GL_FALSE, // normalised?
                           vert_size, // stride
                           (void*)0 // offset
-    );
+                          );
     glEnableVertexAttribArray(0);
 
 
@@ -195,7 +195,7 @@ float vertArr[] = {
                           GL_FALSE,
                           vert_size,
                           (void*)((pos_size + texture_size) * sizeof(float))
-    );
+                          );
     glEnableVertexAttribArray(2);
 
     unsigned int texture;
@@ -341,22 +341,22 @@ void mousepos(GLFWwindow *win, double x, double y)
 {
     mousepos_cb(win, x, y);
     if (esc) {
-      float xoffset = input.mouse.x - input.mouse.last_x;
-      float yoffset = input.mouse.y - input.mouse.last_y;
-      xoffset *= cam.sensitivity;
-      yoffset *= cam.sensitivity;
-      cam.yaw = cam.yaw + xoffset;
-      cam.pitch -= yoffset;
-      if (cam.pitch < -89.0f)
-          cam.pitch = -89.0f;
-      if (cam.pitch > 89.0f)
-          cam.pitch = 89.0f;
+        float xoffset = input.mouse.x - input.mouse.last_x;
+        float yoffset = input.mouse.y - input.mouse.last_y;
+        xoffset *= cam.sensitivity;
+        yoffset *= cam.sensitivity;
+        cam.yaw = cam.yaw + xoffset;
+        cam.pitch -= yoffset;
+        if (cam.pitch < -89.0f)
+            cam.pitch = -89.0f;
+        if (cam.pitch > 89.0f)
+            cam.pitch = 89.0f;
 
-      cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
-      cam.front[1] = sin(glm_rad(cam.pitch));
-      cam.front[2] = sin(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
-      glm_normalize(cam.front);
-  }
+        cam.front[0] = cos(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+        cam.front[1] = sin(glm_rad(cam.pitch));
+        cam.front[2] = sin(glm_rad(cam.yaw)) * cos(glm_rad(cam.pitch));
+        glm_normalize(cam.front);
+    }
 }
 
 void
