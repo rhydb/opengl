@@ -2,7 +2,7 @@ BIN = bin
 LIBS = -lm -lglfw -lGL -lglut -lGLEW
 SOURCES = $(wildcard src/*.c)
 
-OBJECTS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
+OBJECTS = $(patsubst src/%.c, obj/%.o, $(SOURCES))
 
 CFLAGS = -Isrc -std=c99
 
@@ -15,5 +15,5 @@ run: all
 $(BIN): $(OBJECTS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
-%.o: src/%.c src/*.h Makefile
+obj/%.o: src/%.c src/*.h Makefile
 	$(CC) -o $@ $(CFLAGS) $(LIBS) -c $<
