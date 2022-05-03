@@ -66,6 +66,7 @@ main(int argc, char const *argv[])
     glfwSetCursorPosCallback(glfw_win, mousepos);
     glfwSetScrollCallback(glfw_win, onscroll);
     glfwSetKeyCallback(glfw_win, key_cb);
+    glfwSetCursorPos(glfw_win, input.mouse.x, input.mouse.y);
 
     glfwMakeContextCurrent(glfw_win);
 
