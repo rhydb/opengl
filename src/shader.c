@@ -68,3 +68,39 @@ loadshaders(const char* vertfile, const char* fragfile)
     return programid;
 }
 
+void
+set_int(unsigned int id, const char *name, int value)
+{
+  glUniform1i(glGetUniformLocation(id, name), value);
+}
+
+void
+set_float(unsigned int id, const char *name, float value)
+{
+  glUniform1f(glGetUniformLocation(id, name), value);
+}
+
+void
+set_vector2f(unsigned int id, const char *name, float x, float y)
+{
+  glUniform2f(glGetUniformLocation(id, name), x, y);
+}
+
+void
+set_vector3f(unsigned int id, const char *name, float x, float y, float z)
+{
+  glUniform3f(glGetUniformLocation(id, name), x, y, z);
+}
+
+void
+set_vector4f(unsigned int id, const char *name, float x, float y, float z, float w)
+{
+  glUniform4f(glGetUniformLocation(id, name), x, y, z, w);
+}
+
+void
+set_matrix4f(unsigned int id, const char *name, const mat4 *matrix)
+{
+  glUniformMatrix4fv(glGetUniformLocation(id, name), 1, false, (float *)matrix);
+}
+
